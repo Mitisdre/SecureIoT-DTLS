@@ -26,12 +26,12 @@ We analyzed the network traffic for both secure and insecure implementations to 
 ### 🔒 1. Secure Communication (DTLS)
 *With DTLS enabled, the payload is fully encrypted. As seen below, Wireshark captures only meaningless bytes (Application Data). The attacker cannot read the sensor data.*
 
-![Secure DTLS Traffic](images/secure_dtls.png)
+![Secure DTLS Traffic](images/secure.png)
 
 ### 🔓 2. Insecure Communication (Plain UDP)
 *Without encryption, the data is transmitted in cleartext. The sensitive information (`SECRET_DATA...`) is clearly visible to anyone listening on the network.*
 
-![Insecure UDP Traffic](images/insecure_udp.png)
+![Insecure UDP Traffic](images/insecure.png)
 
 ## 📦 Installation
 
