@@ -1,4 +1,7 @@
 venv/
 __pycache__/
-*.pem
 .DS_Store
+*.pem
+*.key
+*.crt
+certs/
