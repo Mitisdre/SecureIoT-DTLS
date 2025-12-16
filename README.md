@@ -19,20 +19,6 @@ The project includes a comparison between **Cleartext UDP** (Insecure) and **DTL
 * **Protocol:** UDP / DTLS
 * **Tools:** Wireshark (for traffic analysis), OpenSSL (for certificates)
 
-## 📸 Proof of Concept (Wireshark Analysis)
-
-We analyzed the network traffic for both secure and insecure implementations to demonstrate the effectiveness of DTLS.
-
-### 🔒 1. Secure Communication (DTLS)
-*With DTLS enabled, the payload is fully encrypted. As seen below, Wireshark captures only meaningless bytes (Application Data). The attacker cannot read the sensor data.*
-
-![Secure DTLS Traffic](images/secure.png)
-
-### 🔓 2. Insecure Communication (Plain UDP)
-*Without encryption, the data is transmitted in cleartext. The sensitive information (`SECRET_DATA...`) is clearly visible to anyone listening on the network.*
-
-![Insecure UDP Traffic](images/insecure.png)
-
 ## 📦 Installation
 
 1.  **Clone the repository:**
@@ -70,6 +56,33 @@ We analyzed the network traffic for both secure and insecure implementations to 
 1.  **Start the Server:** `python insecure_server.py`
 2.  **Start the Client:** `python insecure_client.py`
 3.  *Result: Data is cleartext. Wireshark shows the actual message content.*
+
+## 🦈 How to Analyze with Wireshark
+
+To reproduce the analysis screenshots, follow these steps:
+
+1.  **Select Interface:** Open Wireshark and select the **Loopback** interface (usually named `lo0` on macOS, `lo` on Linux, or "Adapter for loopback traffic capture" on Windows) since the traffic is local (127.0.0.1).
+2.  **Apply Filter:** Paste the following filter into the Wireshark filter bar to isolate project traffic:
+    ```text
+    udp.port == 4433 || udp.port == 9999
+    ```
+3.  **Capture:**
+    * Run the **Insecure** scripts -> You will see blue UDP packets. Inspect the "Data" field to see the plaintext password.
+    * Run the **Secure** scripts -> You will see DTLS packets (Client Hello, Server Hello, etc.). The payload will be hidden inside "Application Data".
+
+## 📸 Proof of Concept (Wireshark Analysis)
+
+We analyzed the network traffic for both secure and insecure implementations to demonstrate the effectiveness of DTLS.
+
+### 🔒 1. Secure Communication (DTLS)
+*With DTLS enabled, the payload is fully encrypted. As seen below, Wireshark captures only meaningless bytes (Application Data). The attacker cannot read the sensor data.*
+
+![Secure DTLS Traffic](images/secure_dtls.png)
+
+### 🔓 2. Insecure Communication (Plain UDP)
+*Without encryption, the data is transmitted in cleartext. The sensitive information (`SECRET_DATA...`) is clearly visible to anyone listening on the network.*
+
+![Insecure UDP Traffic](images/insecure_udp.png)
 
 ## 📄 License
 This project is for educational purposes as part of the IT Security module.
