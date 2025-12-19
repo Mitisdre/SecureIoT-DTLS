@@ -1,54 +1,52 @@
 import socket
 from OpenSSL import SSL
 
-# 1. Configuration
+# Konfiguration
 SERVER_IP = '127.0.0.1'
 PORT = 4433
-
-# Note: In a real production scenario, the client would need the CA certificate
-# to verify that the server is NOT a fake one. 
-# For this demo, we will skip strict verification (VERIFY_NONE) to keep it simple.
+CA_FILE = "certs/ca.crt"
 
 def start_client():
-    print(f"[CLIENT] Connecting to {SERVER_IP}:{PORT}...")
-
-    # 2. Setup SSL Context
-    context = SSL.Context(SSL.DTLS_METHOD)
-    # We are the client, so we don't necessarily need a certificate for ourselves
-    # unless we do Mutual Authentication (which we might add later).
+    # Setup SSL Context
+    ctx = SSL.Context(SSL.DTLS_METHOD)
     
-    # 3. Create UDP Socket
+    # Load CA for verification / CA laden zur Verifizierung
+    ctx.load_verify_locations(CA_FILE)
+    ctx.set_verify(SSL.VERIFY_PEER, lambda conn, cert, errno, depth, ret: True)
+
+    # UDP Socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    
-    # 4. Connect (UDP Style)
-    # In UDP, 'connect' just sets the default destination address.
-    sock.connect((SERVER_IP, PORT))
+    sock.connect((SERVER_IP, PORT)) # Set remote address
 
-    # 5. Wrap the socket
-    client_conn = SSL.Connection(context, sock)
-    
-    # Critical: Tell OpenSSL "I am the Client"
-    client_conn.set_connect_state()
+    # Wrap Socket
+    conn = SSL.Connection(ctx, sock)
+    conn.set_connect_state() # Client mode
 
     try:
-        # 6. Send Data (This triggers the Handshake!)
-        # The handshake happens automatically before the first data is sent.
-        message = "SECRET_SENSOR_DATA: Temp=42.5C"
-        print(f"[CLIENT] Sending encrypted message: {message}")
+        # User Input / Benutzereingabe
+        print(f"[CLIENT] Verbunden mit {SERVER_IP}:{PORT}")
+        print("Geben Sie eine Nachricht ein (Enter für Default):")
+        user_input = input("> ")
+
+        # Default message if input is empty
+        if not user_input:
+            msg = "SECRET_TELEMETRY: Temp=42C"
+        else:
+            msg = user_input
+
+        print(f"[SEND] Verschlüsselt senden: '{msg}'")
         
-        client_conn.send(message.encode('utf-8'))
+        # Trigger Handshake & Send
+        conn.send(msg.encode())
 
-        # 7. Wait for Server Response
-        response = client_conn.recv(1024)
-        print(f"[CLIENT] Server replied: {response.decode('utf-8')}")
+        # Receive reply
+        resp = conn.recv(1024)
+        print(f"[RECV] Server antwortete: {resp.decode()}")
 
-    except SSL.Error as e:
-        print(f"[ERROR] SSL Handshake failed: {e}")
     except Exception as e:
-        print(f"[ERROR] General error: {e}")
+        print(f"[ERROR] Handshake failed: {e}")
     finally:
-        client_conn.close()
-        print("[CLIENT] Connection closed.")
+        conn.close()
 
 if __name__ == "__main__":
     start_client()
